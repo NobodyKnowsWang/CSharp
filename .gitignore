@@ -53,3 +53,9 @@ dkms.conf
 .vs/*
 bin/*
 obj/*
+*.lock
+*.ide
+*.ide-shm
+*.ide-wal
+*.suo
+
