@@ -151,11 +151,33 @@ namespace LearnCSharp
 			Console.WriteLine(result.ToString());
 			Console.WriteLine((2.5 * vector1).ToString());
 			Console.WriteLine((vector1 * 2.5).ToString());
+
+			Vector vector3 = new Vector(1.4,3.5,4.6);
+			Vector vector4 = new Vector(vector2);
+			Console.WriteLine(vector1 == vector2);
+			Console.WriteLine(vector1 == vector3);
+			Console.WriteLine(vector2 == vector4);
+
+			Currency currency = new Currency(100,20);
+			float floatCurrency = currency;
+			Console.WriteLine(floatCurrency);
+
+			ChinesePerson personResult = (ChinesePerson)currency;
+			Console.WriteLine(personResult.money);
 		}
 
 	}
 
-	//运算符重载
+	/*运算符重载
+	 *算数二元运算符 +,-,/,*,%  无限制重载
+	 * 算数一元运算符 +,-,++,-- 无限制重载
+	 * 按位二元运算符 &,|,^,<<,>> 无限制重载
+	 * 按位一元运算符 !,~,true,false   true和false必须成对重载
+	 * 比较运算符 ==,!=,>=,<=,>,<  必须成对重载
+	 * 赋值运算符 +=,-=,*=,/=,>>=,<<=,%=,&=,|=,^=  不能显式重载这些运算符，但在重写单个运算符时，它们会被隐式重写。
+	 * 索引运算符 [] 不能直接重载索引运算符。
+	 * 数据类型转换运算符 () 不能直接重载类型强制转换运算符。
+	 */
 	struct Vector
 	{
 		public double x, y, z;
@@ -210,13 +232,100 @@ namespace LearnCSharp
 		}
 
 		/*比较运算符重载
+		 * 如果重载了“==”就必须重载"!="，否则会产生编译错误
+		 * 比较运算符必须返回布尔类型
+		 * 重载"=="和"!="时，还必须重载System.Object中继承的Equals()和GetHashCode()方法，否则会产生一个编译错误。原因是Equals()方应实现与"=="运算符相同类型的相等逻辑。
 		 * 
 		 */
+		public static bool operator ==(Vector lhs, Vector rhs)
+		{
+			if (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		public static bool operator !=(Vector lhs, Vector rhs)
+		{
+			return !(lhs == rhs);
+		}
+
+		public bool Equals(Vector obj)
+		{
+			if(obj == null)
+				throw new ArgumentNullException("obj");
+			return this.x == obj.x && this.y == obj.y && this.z == obj.z;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj == null)
+				throw new ArgumentNullException("obj");
+			return Equals((Vector)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
+		}
+
+	}
+
+	/*实现用户定义的类型强制转换
+	 * 类和结构做法相同，以结构为例子
+	 * 如果一个类派生自另一个类，则不能定义这两个类之间的强制转换
+	 * 类型强制转换必须在源数据类型或目标数据类型的内部定义。
+	 */
+	struct Currency
+	{
+		public uint Dollor;
+		public ushort Cent;
+
+		public Currency(uint dollor, ushort cent)
+		{
+			this.Dollor = dollor;
+			this.Cent = cent;
+		}
+
+		public override string ToString()
+		{
+			return String.Format("${0}.{1,- 2:00}",Dollor,Cent);
+		}
+
+		/*实现强制转换方法
+		 * implicit 关键字用于声明隐式的用户定义类型转换运算符。 如果可以确保转换过程不会造成数据丢失，则可使用该关键字在用户定义类型和其他类型之间进行隐式转换。
+		 * 隐式转换可以通过消除不必要的强制转换来提高源代码的可读性。
+		 * 一般情况下，隐式转换运算符应当从不引发异常并且从不丢失信息，以便可以在程序员不知晓的情况下安全使用它们。 
+		 * 如果转换运算符不能满足那些条件，则应将其标记为 explicit
+		 */
+		public static implicit operator float(Currency value)
+		{
+			return value.Dollor + (value.Cent / 100f);
+		}
+
+		/*实现强制转换方法
+		 * explicit 关键字声明必须通过转换来调用的用户定义的类型转换运算符。
+		 * 此转换运算符从源类型转换为目标类型。 源类型提供转换运算符。
+		 * 不同于隐式转换，显式转换运算符必须通过转换的方式来调用。 如果转换操作会导致异常或丢失信息，则应将其标记为 explicit 
+		 * 这可阻止编译器静默调用可能产生意外后果的转换操作。
+		*/
+		public static explicit operator ChinesePerson(Currency value)
+		{
+			ChinesePerson result = new ChinesePerson() { FirstName="Wang",SecondName="Jun",province="Shandong",money=value};
+			return result;
+		}
+
 
 	}
 
 	public class ChinesePerson : Person
 	{
 		public string province { get; set; }
+		public float money { get; set; }
+
 	}
 }
